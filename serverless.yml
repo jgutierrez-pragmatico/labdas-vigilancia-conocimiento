@@ -1,12 +1,12 @@
 service: lambda-authorizer
+useDotenv: true
 #app: your-app-name
 #tenant: your-tenant-name
 
 provider:
   name: aws
   runtime: nodejs14.x
-#  environment:
-#    hostQueue: amqp://localhost
+# environment:
 # role: arn:aws:iam:::
 #  environment:
 #    REGION: ${self:custom.myEnvironment.REGION.${self:custom.myStage}}
@@ -14,20 +14,83 @@ provider:
 #plugins for test in localhost
 plugins:
   - serverless-offline
+  - serverless-esbuild
+  - serverless-dotenv-plugin
 
 functions:
-  lambda:
-    handler: src/main/lambda/function.handler
+  getEntries:
+    name: tech-radar-getEntries
+    handler: src/main/lambda/getEntries.handler
+    timeout: 20
     events:
       - http:
-          path: /auth
-          method: any
-          authorizer:
-            name: authorizer
-            arn: arn:aws:cognito-idp:${self:provider.region}:${self:provider.stage}:userpool/${self:custom.userPoolId}
-            identitySource: method.request.header.Authorization
-            type: COGNITO_USER_POOLS
-            resultTtlInSeconds: 0
-            identityValidationExpression: .*JWT.*
+          path: /entries
+          method: get
+          cors:
+            origin: "*"
+  getKc:
+    name: tech-radar-getKc
+    handler: src/main/lambda/getKc.handler
+    timeout: 20
+    events:
+      - http:
+          path: /kc
+          method: get
+          cors:
+            origin: "*"
+  getChapter:
+    name: tech-radar-getChapter
+    handler: src/main/lambda/getChapter.handler
+    timeout: 20
+    events:
+      - http:
+          path: /chapter
+          method: get
+          cors:
+            origin: "*"
+  getFases:
+    name: tech-radar-getFases
+    handler: src/main/lambda/getFases.handler
+    timeout: 20
+    events:
+      - http:
+          path: /fases
+          method: get
+          cors:
+            origin: "*"
+  createEntry:
+    name: tech-radar-createEntry
+    handler: src/main/lambda/createEntry.handler
+    timeout: 20
+    events:
+      - http:
+          path: /entries
+          method: post
+          cors:
+            origin: "*"
+  getEntryById:
+    name: tech-radar-getEntryById
+    handler: src/main/lambda/getEntryById.handler
+    timeout: 20
+    events:
+      - http:
+          path: /entries/{id}
+          method: get
+          cors:
+            origin: "*"
+  updateEntry:
+    name: tech-radar-updateEntry
+    handler: src/main/lambda/updateEntry.handler
+    timeout: 20
+    events:
+      - http:
+          path: /entries/{id}
+          method: put
+          cors:
+            origin: "*"
 custom:
   userPoolId: <cognito-user-pool-id>
+  esbuild:
+    external:
+      - "knex"
+      - "pg"
